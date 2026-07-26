@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle de Estoque Manual</title>
+  <title>Drogaria Menor Preço - Estoque</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
   
   <style>
     body {
@@ -62,77 +64,141 @@
       font-size: 0.85em;
       margin-top: 5px;
     }
+    #status { text-align: center; color: #666; margin-bottom: 15px; font-style: italic; }
   </style>
 </head>
 <body>
 
-  <h1>Controle de Estoque</h1>
+  <h1>Estoque - Drogaria Menor Preço</h1>
 
   <div class="form-card">
-    <h3>Adicionar / Editar Produto</h3>
+    <h3>Ajustar / Adicionar Preço Manual</h3>
     <input type="text" id="codigo" placeholder="Código do Produto (ex: 051173)">
     <input type="text" id="descricao" placeholder="Nome / Descrição do Produto">
     <input type="number" step="0.01" id="preco" placeholder="Preço (R$)">
-    <button onclick="salvarProduto()">Salvar Produto</button>
+    <button onclick="salvarPrecoManual()">Salvar / Atualizar Preço</button>
   </div>
 
-  <h2>Produtos Cadastrados</h2>
+  <div id="status">Sincronizando com o sistema...</div>
   <div id="produtos-list" class="grid"></div>
 
   <script>
-    function carregarProdutos() {
-      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
+    const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdXlsZGpjaGRla3hlZWVhZmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwMjg0NjcsImV4cCI6MjEwMDYwNDQ2N30.zGmYatqKxCdf_zjDF75DOcgS67TXvu_w3fiEthnDg5I';
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function carregarTudo() {
+      const statusEl = document.getElementById('status');
       const container = document.getElementById('produtos-list');
 
-      if (produtos.length === 0) {
-        container.innerHTML = '<p style="color: #666; text-align:center;">Nenhum produto cadastrado ainda.</p>';
-        return;
-      }
+      // Pega os preços manuais salvos no celular (se houver)
+      let manuais = JSON.parse(localStorage.getItem('estoque_manual')) || [];
 
-      container.innerHTML = produtos.map((p, index) => `
-        <div class="card">
-          <div class="codigo">CÓD: ${p.codigo}</div>
-          <div class="descricao">${p.descricao}</div>
-          <div class="preco">R$ ${Number(p.preco).toFixed(2)}</div>
-          <button class="btn-excluir" onclick="excluirProduto(${index})">Excluir</button>
-        </div>
-      `).join('');
+      try {
+        // Tenta buscar do Supabase
+        const { data, error } = await _supabase.from('produtos').select('*');
+
+        if (error) {
+          console.warn("Erro ao buscar do Supabase, usando apenas dados locais:", error.message);
+        }
+
+        let listaFinal = [];
+
+        if (data && data.length > 0) {
+          // Mescla os dados do Supabase com os ajustes manuais do celular
+          listaFinal = data.map(prod => {
+            const cod = String(prod.codigo || prod.id || '');
+            const manualEncontrado = manuais.find(m => m.codigo === cod);
+
+            // Se você cadastrou um preço manual para este código, ele usa o seu. Senão, tenta do banco.
+            const precoFinal = manualEncontrado ? manualEncontrado.preco : (prod.preco || prod.valor || prod.valor_unitario || 0);
+            const descFinal = manualEncontrado ? manualEncontrado.descricao : (prod.descricao || prod.nome || 'Produto');
+
+            return {
+              codigo: cod,
+              descricao: descFinal,
+              preco: precoFinal,
+              origem: manualEncontrado ? 'manual' : 'supabase'
+            };
+          });
+        }
+
+        // Adiciona também os produtos que foram criados 100% manual e não estão no Supabase
+        manuais.forEach(m => {
+          if (!listaFinal.some(item => item.codigo === m.codigo)) {
+            listaFinal.push(m);
+          }
+        });
+
+        if (listaFinal.length === 0) {
+          statusEl.textContent = 'Nenhum produto encontrado.';
+          container.innerHTML = '';
+          return;
+        }
+
+        statusEl.style.display = 'none';
+        container.innerHTML = listaFinal.map((p, index) => `
+          <div class="card">
+            <div class="codigo">CÓD: ${p.codigo}</div>
+            <div class="descricao">${p.descricao}</div>
+            <div class="preco">R$ ${Number(p.preco).toFixed(2)}</div>
+            ${p.origem === 'manual' ? `<button class="btn-excluir" onclick="excluirManual('${p.codigo}')">Remover Ajuste</button>` : ''}
+          </div>
+        `).join('');
+
+      } catch (e) {
+        statusEl.textContent = 'Modo Offline / Usando dados locais.';
+        // Se cair aqui, mostra pelo menos os manuais
+        if (manuais.length > 0) {
+          container.innerHTML = manuais.map((p, index) => `
+            <div class="card">
+              <div class="codigo">CÓD: ${p.codigo}</div>
+              <div class="descricao">${p.descricao}</div>
+              <div class="preco">R$ ${Number(p.preco).toFixed(2)}</div>
+              <button class="btn-excluir" onclick="excluirManual('${p.codigo}')">Remover</button>
+            </div>
+          `).join('');
+        }
+      }
     }
 
-    function salvarProduto() {
-      const codigo = document.getElementById('codigo').value;
-      const descricao = document.getElementById('descricao').value;
-      const preco = document.getElementById('preco').value;
+    function salvarPrecoManual() {
+      const codigo = document.getElementById('codigo').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
+      const preco = document.getElementById('preco').value.trim();
 
       if (!codigo || !descricao || !preco) {
         alert('Por favor, preencha todos os campos!');
         return;
       }
 
-      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
+      let manuais = JSON.parse(localStorage.getItem('estoque_manual')) || [];
       
-      // Adiciona o novo produto na lista
-      produtos.push({ codigo, descricao, preco });
+      // Remove se já existir para atualizar o preço
+      manuais = manuais.filter(m => m.codigo !== codigo);
       
-      localStorage.setItem('estoque_produtos', JSON.stringify(produtos));
+      manuais.push({ codigo, descricao, preco, origem: 'manual' });
+      
+      localStorage.setItem('estoque_manual', JSON.stringify(manuais));
 
-      // Limpa os campos
       document.getElementById('codigo').value = '';
       document.getElementById('descricao').value = '';
       document.getElementById('preco').value = '';
 
-      carregarProdutos();
+      carregarTudo();
+      alert('Preço salvo com sucesso!');
     }
 
-    function excluirProduto(index) {
-      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
-      produtos.splice(index, 1);
-      localStorage.setItem('estoque_produtos', JSON.stringify(produtos));
-      carregarProdutos();
+    function excluirManual(codigo) {
+      let manuais = JSON.parse(localStorage.getItem('estoque_manual')) || [];
+      manuais = manuais.filter(m => m.codigo !== codigo);
+      localStorage.setItem('estoque_manual', JSON.stringify(manuais));
+      carregarTudo();
     }
 
-    // Carrega ao iniciar a página
-    carregarProdutos();
+    carregarTudo();
   </script>
 </body>
 </html>
