@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estoque de Produtos</title>
   
-  <!-- Versão oficial atualizada do Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
   
   <style>
@@ -65,13 +64,20 @@
         }
 
         statusEl.style.display = 'none';
-        container.innerHTML = data.map(prod => `
-          <div class="card">
-            <div class="codigo">CÓD: ${prod.codigo || prod.id}</div>
-            <div class="descricao">${prod.descricao || prod.nome}</div>
-            <div class="preco">R$ ${Number(prod.valor_unitario || prod.preco || 0).toFixed(2)}</div>
-          </div>
-        `).join('');
+        container.innerHTML = data.map(prod => {
+          // Procura automaticamente pelo preço em qualquer possível nome de coluna
+          const precoValor = prod.valor_unitario ?? prod.preco ?? prod.valor ?? prod.preco_venda ?? prod.valor_venda ?? 0;
+          const codValor = prod.codigo ?? prod.id ?? '---';
+          const descValor = prod.descricao ?? prod.nome ?? 'Produto sem nome';
+
+          return `
+            <div class="card">
+              <div class="codigo">CÓD: ${codValor}</div>
+              <div class="descricao">${descValor}</div>
+              <div class="preco">R$ ${Number(precoValor).toFixed(2)}</div>
+            </div>
+          `;
+        }).join('');
       }
 
       carregar();
