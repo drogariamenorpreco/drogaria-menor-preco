@@ -29,20 +29,21 @@
 
     .container { max-width: 600px; margin: 0 auto; padding: 15px; }
 
+    /* Barra de Busca */
+    .search-box { margin-bottom: 15px; }
+    .search-box input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+
     /* Grelha de Produtos */
-    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .product-card { background: var(--card-bg); border-radius: 8px; padding: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
     .product-img { width: 100%; height: 130px; object-fit: contain; border-radius: 4px; background: #ffffff; margin-bottom: 8px; }
-    .product-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .product-price { color: var(--primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
     .btn-add { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
 
     /* Controles de Edição (Modo Gerente) */
     .edit-controls { background: #fff8e1; border: 1px solid #ffe082; padding: 8px; border-radius: 6px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-    
-    /* Botão de Upload Estilizado */
     .btn-upload-label { background: #ff9800; color: white; padding: 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; text-align: center; display: block; width: 100%; }
-    .btn-upload-label:active { background: #f57c00; }
 
     .edit-controls button { background: #fdfdfd; color: #555; border: 1px solid #ddd; padding: 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: 500; }
     .edit-controls button.btn-del { background: #fff1f0; color: #f44336; border-color: #ffa39e; margin-top: 4px; }
@@ -71,7 +72,6 @@
 </head>
 <body>
 
-  <!-- Barra Superior do Gerente -->
   <div class="admin-bar-top">
     <span>Painel Drogaria</span>
     <button onclick="toggleAdminMode()">🔐 Área do Gerente</button>
@@ -83,14 +83,15 @@
   </header>
 
   <div class="container">
-    <!-- Botão Adicionar Produto (Invisível por padrão) -->
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="🔍 Buscar produto no estoque..." onkeyup="filterProducts()">
+    </div>
+
     <button class="btn-new-prod" id="btn-add-prod" onclick="addNewProduct()">➕ Adicionar Novo Produto</button>
     
-    <!-- Lista de Produtos -->
     <div class="products-grid" id="products-list"></div>
   </div>
 
-  <!-- Barra do Carrinho (Fixa no rodapé) -->
   <div class="cart-bar">
     <div>
       <span style="font-size: 0.85rem; color: var(--gray);">Total:</span>
@@ -99,7 +100,6 @@
     <button class="cart-btn" onclick="openCart()">Ver Pedido (<span id="cart-count">0</span>)</button>
   </div>
 
-  <!-- Modal do Carrinho -->
   <div class="modal" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -153,54 +153,34 @@
   </div>
 
   <script>
-    // Configurações Fixas
     const SEU_WHATSAPP = "5522981279222"; 
     const SUA_CHAVE_PIX = "44b6a342-cd1d-4216-b269-237477b9bb53";
     const SENHA_GERENTE = "1970";
 
-    // Produtos Iniciais (Caso o navegador não tenha dados salvos)
     const initialProducts = [
-      {
-        id: 1,
-        name: "Dipirona Monoidratada 500mg 20 Cps",
-        price: 4.99,
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop"
-      },
-      {
-        id: 2,
-        name: "Dorflex 36 Comprimidos",
-        price: 18.50,
-        image: "https://images.unsplash.com/photo-1550572017-edf7b6b194d3?w=300&auto=format&fit=crop"
-      },
-      {
-        id: 3,
-        name: "Protetor Solar Sundown FPS 50",
-        price: 45.90,
-        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&auto=format&fit=crop"
-      },
-      {
-        id: 4,
-        name: "Fralda Pampers Supersec G 30 Unid",
-        price: 39.90,
-        image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&auto=format&fit=crop"
-      }
+      { id: 1, name: "CIMEGRIPE 20CL CIMED", price: 7.99, image: "https://via.placeholder.com/150?text=Cimegripe" },
+      { id: 2, name: "DIPIRONA 500MG 10CP PRATI DONADUZZI", price: 1.60, image: "https://via.placeholder.com/150?text=Dipirona" },
+      { id: 3, name: "DIAD 1,5MG 1CP CIMED", price: 3.99, image: "https://via.placeholder.com/150?text=Diad" },
+      { id: 4, name: "LORATAMED 12CP CIMED", price: 13.19, image: "https://via.placeholder.com/150?text=Loratamed" },
+      { id: 5, name: "NARIX AD 30ML CIMED", price: 2.72, image: "https://via.placeholder.com/150?text=Narix" },
+      { id: 6, name: "LOSARTANA POTASSICA 50MG 30CP NEO QUIM", price: 5.44, image: "https://via.placeholder.com/150?text=Losartana" },
+      { id: 7, name: "DORFLEX EV 10CP", price: 5.95, image: "https://via.placeholder.com/150?text=Dorflex" },
+      { id: 8, name: "CITRATO DE SILDENAF.50MG 4CP NEO QUIM", price: 1.49, image: "https://via.placeholder.com/150?text=Sildenafila" },
+      { id: 9, name: "SAB.PROTEX 85G (TODOS OS TIPOS)", price: 2.68, image: "https://via.placeholder.com/150?text=Protex" },
+      { id: 10, name: "PAPEL HIGIENICO FLORAL NEUTRO 12UN", price: 7.68, image: "https://via.placeholder.com/150?text=Papel+Higienico" }
     ];
 
-    // Carrega produtos do LocalStorage ou usa os iniciais
     let products = JSON.parse(localStorage.getItem('drogaria_products')) || initialProducts;
     let isAdmin = false;
     let cart = [];
 
-    // Define a chave Pix na tela
     document.getElementById("pix-key-display").innerText = SUA_CHAVE_PIX;
 
-    // Salva alterações no navegador e atualiza a tela
     function saveProducts() {
       localStorage.setItem('drogaria_products', JSON.stringify(products));
-      renderProducts();
+      renderProducts(products);
     }
 
-    // Ativa/Desativa Modo Gerente
     function toggleAdminMode() {
       if(!isAdmin) {
         const pass = prompt("Digite a senha do gerente:");
@@ -216,13 +196,18 @@
         alert("Modo Gerente Desativado.");
       }
       document.getElementById("btn-add-prod").style.display = isAdmin ? "block" : "none";
-      renderProducts();
+      renderProducts(products);
     }
 
-    // Desenha a lista de produtos na tela
-    function renderProducts() {
+    function filterProducts() {
+      const query = document.getElementById("search-input").value.toLowerCase();
+      const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+      renderProducts(filtered);
+    }
+
+    function renderProducts(itemsToRender) {
       const grid = document.getElementById("products-list");
-      grid.innerHTML = products.map(p => `
+      grid.innerHTML = itemsToRender.map(p => `
         <div class="product-card">
           <img src="${p.image}" class="product-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150?text=Sem+Foto'">
           <div class="product-title">${p.name}</div>
@@ -232,11 +217,8 @@
 
           ${isAdmin ? `
             <div class="edit-controls">
-              
-              <!-- CAMPO DE UPLOAD ESTILIZADO -->
-              <label for="file-markup-${p.id}" class="btn-upload-label">📷 Enviar Foto do Celular</label>
+              <label for="file-markup-${p.id}" class="btn-upload-label">📷 Enviar Foto</label>
               <input type="file" id="file-markup-${p.id}" accept="image/*" style="display:none" onchange="handleFileUpload(event, ${p.id})">
-              
               <button onclick="editPrice(${p.id})">✏️ Mudar Preço</button>
               <button onclick="editName(${p.id})">📝 Mudar Nome</button>
               <button class="btn-del" onclick="deleteProduct(${p.id})">🗑️ Excluir</button>
@@ -246,29 +228,19 @@
       `).join('');
     }
 
-    // Processa o arquivo de imagem escolhido no celular
     function handleFileUpload(event, id) {
       const file = event.target.files[0];
       if (file) {
-        // Verifica se é uma imagem
-        if (!file.type.startsWith('image/')) {
-          alert('Por favor, selecione um arquivo de imagem válido.');
-          return;
-        }
-
         const reader = new FileReader();
         reader.onload = function(e) {
-          // Encontra o produto e atualiza a imagem com os dados Base64
           const prod = products.find(p => p.id === id);
           prod.image = e.target.result;
-          saveProducts(); // Salva no navegador
+          saveProducts();
         };
-        // Lê o arquivo como uma URL de dados (Base64)
         reader.readAsDataURL(file);
       }
     }
 
-    // Funções de Edição (Gerente)
     function editPrice(id) {
       const prod = products.find(p => p.id === id);
       const newPrice = prompt(`Novo preço para "${prod.name}":`, prod.price);
@@ -305,12 +277,11 @@
         id: newId,
         name: name,
         price: parseFloat(price.replace(',', '.')),
-        image: "https://via.placeholder.com/150?text=Aguardando+Foto"
+        image: "https://via.placeholder.com/150?text=Sem+Foto"
       });
       saveProducts();
     }
 
-    // Funções do Carrinho
     function addToCart(id) {
       const prod = products.find(p => p.id === id);
       const item = cart.find(c => c.id === id);
@@ -381,8 +352,7 @@
       window.open(`https://wa.me/${SEU_WHATSAPP}?text=${encoded}`, '_blank');
     }
 
-    // Inicializa a tela
-    renderProducts();
+    renderProducts(products);
   </script>
 </body>
 </html>
