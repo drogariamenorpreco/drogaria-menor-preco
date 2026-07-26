@@ -3,64 +3,136 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque de Produtos</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+  <title>Controle de Estoque Manual</title>
   
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f6f8;
       margin: 0;
-      padding: 20px;
+      padding: 15px;
     }
-    h1 { color: #333; }
+    h1 { color: #333; font-size: 1.5em; text-align: center; }
+    .form-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    button {
+      background-color: #2e7d32;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 4px;
+      width: 100%;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:active { background-color: #1b5e20; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
     .card {
       background: #fff;
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 15px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
     }
-    pre { background: #eee; padding: 10px; border-radius: 4px; font-size: 0.85em; overflow-x: auto; }
+    .codigo { font-size: 0.85em; color: #888; }
+    .descricao { font-weight: bold; font-size: 1.1em; color: #222; margin: 4px 0; }
+    .preco { color: #2e7d32; font-weight: bold; font-size: 1.2em; margin-bottom: 10px; }
+    .btn-excluir {
+      background-color: #c62828;
+      padding: 6px;
+      font-size: 0.85em;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Diagnóstico Completo do Banco</h1>
-  <div id="status">Carregando dados...</div>
-  <div id="produtos-list"></div>
+  <h1>Controle de Estoque</h1>
+
+  <div class="form-card">
+    <h3>Adicionar / Editar Produto</h3>
+    <input type="text" id="codigo" placeholder="Código do Produto (ex: 051173)">
+    <input type="text" id="descricao" placeholder="Nome / Descrição do Produto">
+    <input type="number" step="0.01" id="preco" placeholder="Preço (R$)">
+    <button onclick="salvarProduto()">Salvar Produto</button>
+  </div>
+
+  <h2>Produtos Cadastrados</h2>
+  <div id="produtos-list" class="grid"></div>
 
   <script>
-    const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdXlsZGpjaGRla3hlZWVhZmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwMjg0NjcsImV4cCI6MjEwMDYwNDQ2N30.zGmYatqKxCdf_zjDF75DOcgS67TXvu_w3fiEthnDg5I';
-
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function carregar() {
-      const statusEl = document.getElementById('status');
+    function carregarProdutos() {
+      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
       const container = document.getElementById('produtos-list');
 
-      const { data, error } = await _supabase.from('produtos').select('*');
-
-      if (error) {
-        statusEl.innerHTML = `<b style="color:red">Erro: ${error.message}</b>`;
+      if (produtos.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align:center;">Nenhum produto cadastrado ainda.</p>';
         return;
       }
 
-      statusEl.style.display = 'none';
-      
-      // Mostra o objeto exato que veio do Supabase em formato de texto para sabermos os nomes das colunas e valores
-      container.innerHTML = data.map(prod => `
+      container.innerHTML = produtos.map((p, index) => `
         <div class="card">
-          <p><strong>Dados crus do produto no banco:</strong></p>
-          <pre>${JSON.stringify(prod, null, 2)}</pre>
+          <div class="codigo">CÓD: ${p.codigo}</div>
+          <div class="descricao">${p.descricao}</div>
+          <div class="preco">R$ ${Number(p.preco).toFixed(2)}</div>
+          <button class="btn-excluir" onclick="excluirProduto(${index})">Excluir</button>
         </div>
       `).join('');
     }
 
-    carregar();
+    function salvarProduto() {
+      const codigo = document.getElementById('codigo').value;
+      const descricao = document.getElementById('descricao').value;
+      const preco = document.getElementById('preco').value;
+
+      if (!codigo || !descricao || !preco) {
+        alert('Por favor, preencha todos os campos!');
+        return;
+      }
+
+      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
+      
+      // Adiciona o novo produto na lista
+      produtos.push({ codigo, descricao, preco });
+      
+      localStorage.setItem('estoque_produtos', JSON.stringify(produtos));
+
+      // Limpa os campos
+      document.getElementById('codigo').value = '';
+      document.getElementById('descricao').value = '';
+      document.getElementById('preco').value = '';
+
+      carregarProdutos();
+    }
+
+    function excluirProduto(index) {
+      let produtos = JSON.parse(localStorage.getItem('estoque_produtos')) || [];
+      produtos.splice(index, 1);
+      localStorage.setItem('estoque_produtos', JSON.stringify(produtos));
+      carregarProdutos();
+    }
+
+    // Carrega ao iniciar a página
+    carregarProdutos();
   </script>
 </body>
 </html>
