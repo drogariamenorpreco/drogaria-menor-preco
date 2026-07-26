@@ -15,75 +15,52 @@
       padding: 20px;
     }
     h1 { color: #333; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
     .card {
       background: #fff;
       border-radius: 8px;
       padding: 16px;
+      margin-bottom: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .codigo { font-size: 0.85em; color: #888; margin-bottom: 5px; }
-    .descricao { font-weight: bold; font-size: 1.1em; color: #222; margin-bottom: 8px; }
-    .preco { color: #2e7d32; font-weight: bold; font-size: 1.2em; }
-    .erro { color: red; font-weight: bold; padding: 10px; background: #ffebee; border-radius: 4px; }
+    pre { background: #eee; padding: 10px; border-radius: 4px; font-size: 0.85em; overflow-x: auto; }
   </style>
 </head>
 <body>
 
-  <h1>Estoque do Sistema</h1>
-  <div id="status">Carregando estoque...</div>
-  <div id="produtos-list" class="grid"></div>
+  <h1>Diagnóstico Completo do Banco</h1>
+  <div id="status">Carregando dados...</div>
+  <div id="produtos-list"></div>
 
   <script>
     const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdXlsZGpjaGRla3hlZWVhZmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwMjg0NjcsImV4cCI6MjEwMDYwNDQ2N30.zGmYatqKxCdf_zjDF75DOcgS67TXvu_w3fiEthnDg5I';
 
-    try {
-      const { createClient } = supabase;
-      const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      async function carregar() {
-        const statusEl = document.getElementById('status');
-        const container = document.getElementById('produtos-list');
+    async function carregar() {
+      const statusEl = document.getElementById('status');
+      const container = document.getElementById('produtos-list');
 
-        const { data, error } = await _supabase.from('produtos').select('*');
+      const { data, error } = await _supabase.from('produtos').select('*');
 
-        if (error) {
-          statusEl.innerHTML = `<div class="erro">Erro do Banco: ${error.message}</div>`;
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          statusEl.textContent = 'A tabela "produtos" está vazia!';
-          return;
-        }
-
-        statusEl.style.display = 'none';
-        container.innerHTML = data.map(prod => {
-          // Procura automaticamente pelo preço em qualquer possível nome de coluna
-          const precoValor = prod.valor_unitario ?? prod.preco ?? prod.valor ?? prod.preco_venda ?? prod.valor_venda ?? 0;
-          const codValor = prod.codigo ?? prod.id ?? '---';
-          const descValor = prod.descricao ?? prod.nome ?? 'Produto sem nome';
-
-          return `
-            <div class="card">
-              <div class="codigo">CÓD: ${codValor}</div>
-              <div class="descricao">${descValor}</div>
-              <div class="preco">R$ ${Number(precoValor).toFixed(2)}</div>
-            </div>
-          `;
-        }).join('');
+      if (error) {
+        statusEl.innerHTML = `<b style="color:red">Erro: ${error.message}</b>`;
+        return;
       }
 
-      carregar();
-    } catch (e) {
-      document.getElementById('status').innerHTML = `<div class="erro">Erro ao iniciar: ${e.message}</div>`;
+      statusEl.style.display = 'none';
+      
+      // Mostra o objeto exato que veio do Supabase em formato de texto para sabermos os nomes das colunas e valores
+      container.innerHTML = data.map(prod => `
+        <div class="card">
+          <p><strong>Dados crus do produto no banco:</strong></p>
+          <pre>${JSON.stringify(prod, null, 2)}</pre>
+        </div>
+      `).join('');
     }
+
+    carregar();
   </script>
 </body>
 </html>
