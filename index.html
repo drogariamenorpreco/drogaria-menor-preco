@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estoque de Produtos</title>
   
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Versão oficial atualizada do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
   
   <style>
     body {
@@ -15,61 +16,68 @@
       padding: 20px;
     }
     h1 { color: #333; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
     .card {
       background: #fff;
       border-radius: 8px;
       padding: 16px;
-      margin-bottom: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .erro { color: red; font-weight: bold; }
+    .codigo { font-size: 0.85em; color: #888; margin-bottom: 5px; }
+    .descricao { font-weight: bold; font-size: 1.1em; color: #222; margin-bottom: 8px; }
+    .preco { color: #2e7d32; font-weight: bold; font-size: 1.2em; }
+    .erro { color: red; font-weight: bold; padding: 10px; background: #ffebee; border-radius: 4px; }
   </style>
 </head>
 <body>
 
   <h1>Estoque do Sistema</h1>
-  <div id="status">Conectando ao banco de dados...</div>
-  <div id="produtos-list"></div>
+  <div id="status">Carregando estoque...</div>
+  <div id="produtos-list" class="grid"></div>
 
   <script>
     const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
     const SUPABASE_ANON_KEY = 'Sb_publishable_BDjlzJ74FN8jDxP-C_DsQw_b4tgvRrV';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    try {
+      const { createClient } = supabase;
+      const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function testarConexao() {
-      const statusEl = document.getElementById('status');
-      const container = document.getElementById('produtos-list');
+      async function carregar() {
+        const statusEl = document.getElementById('status');
+        const container = document.getElementById('produtos-list');
 
-      try {
-        // Tenta buscar da tabela "produtos"
-        const { data, error } = await supabase.from('produtos').select('*');
+        const { data, error } = await _supabase.from('produtos').select('*');
 
         if (error) {
-          statusEl.innerHTML = `<span class="erro">Erro do Supabase: ${error.message}</span>`;
+          statusEl.innerHTML = `<div class="erro">Erro do Banco: ${error.message}</div>`;
           return;
         }
 
         if (!data || data.length === 0) {
-          statusEl.textContent = 'Conectado com sucesso, mas a tabela "produtos" está vazia ou sem permissão de leitura!';
+          statusEl.textContent = 'A tabela "produtos" está vazia!';
           return;
         }
 
         statusEl.style.display = 'none';
         container.innerHTML = data.map(prod => `
           <div class="card">
-            <div><strong>CÓD:</strong> ${prod.codigo || prod.id}</div>
-            <div><strong>Descrição:</strong> ${prod.descricao || prod.nome}</div>
-            <div><strong>Preço:</strong> R$ ${Number(prod.valor_unitario || prod.preco || 0).toFixed(2)}</div>
+            <div class="codigo">CÓD: ${prod.codigo || prod.id}</div>
+            <div class="descricao">${prod.descricao || prod.nome}</div>
+            <div class="preco">R$ ${Number(prod.valor_unitario || prod.preco || 0).toFixed(2)}</div>
           </div>
         `).join('');
-
-      } catch (err) {
-        statusEl.innerHTML = `<span class="erro">Erro no código: ${err.message}</span>`;
       }
-    }
 
-    testarConexao();
+      carregar();
+    } catch (e) {
+      document.getElementById('status').innerHTML = `<div class="erro">Erro ao iniciar: ${e.message}</div>`;
+    }
   </script>
 </body>
 </html>
