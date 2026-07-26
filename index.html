@@ -3,356 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drogaria Menor Preço - Búzios</title>
+  <title>Estoque de Produtos</title>
+  
+  <!-- Importa a biblioteca do Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
-    :root {
-      --primary: #e50914;
-      --primary-dark: #b80710;
-      --bg: #f4f6f8;
-      --card-bg: #ffffff;
-      --text: #222222;
-      --gray: #666666;
-      --border: #e0e0e0;
-      --green: #25d366;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 20px;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
-
-    header { background: var(--primary); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    header h1 { font-size: 1.2rem; font-weight: bold; }
-    header p { font-size: 0.8rem; opacity: 0.9; }
-
-    /* Barra do Gerente */
-    .admin-bar-top { background: #333; color: white; padding: 6px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
-    .admin-bar-top button { background: #555; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
-
-    .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-
-    /* Barra de Busca */
-    .search-box { margin-bottom: 15px; }
-    .search-box input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
-
-    /* Grelha de Produtos */
-    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .product-card { background: var(--card-bg); border-radius: 8px; padding: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
-    .product-img { width: 100%; height: 130px; object-fit: contain; border-radius: 4px; background: #ffffff; margin-bottom: 8px; }
-    .product-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .product-price { color: var(--primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
-    .btn-add { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
-
-    /* Controles de Edição (Modo Gerente) */
-    .edit-controls { background: #fff8e1; border: 1px solid #ffe082; padding: 8px; border-radius: 6px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .btn-upload-label { background: #ff9800; color: white; padding: 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; text-align: center; display: block; width: 100%; }
-
-    .edit-controls button { background: #fdfdfd; color: #555; border: 1px solid #ddd; padding: 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: 500; }
-    .edit-controls button.btn-del { background: #fff1f0; color: #f44336; border-color: #ffa39e; margin-top: 4px; }
-
-    .btn-new-prod { background: #2196F3; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; margin-bottom: 15px; cursor: pointer; display: none; font-size: 0.9rem; }
-
-    /* Carrinho e Modal */
-    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 99; }
-    .cart-btn { background: var(--green); color: white; border: none; padding: 10px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-end; }
-    .modal-content { background: white; width: 100%; max-width: 600px; border-radius: 16px 16px 0 0; padding: 20px; max-height: 85vh; overflow-y: auto; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
-    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
-    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
-
-    .pix-box { background: #e8f5e9; border: 1px dashed var(--green); padding: 12px; border-radius: 8px; text-align: center; margin: 15px 0; }
-    .pix-box strong { color: #2e7d32; font-size: 0.95rem; word-break: break-all; display: block; margin-top: 5px; }
-    .btn-copy { background: #2e7d32; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 0.85rem; margin-top: 8px; cursor: pointer; font-weight: bold; }
-
-    .btn-checkout { background: var(--green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 1rem; cursor: pointer; }
+    h1 {
+      color: #333;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .codigo {
+      font-size: 0.85em;
+      color: #888;
+      margin-bottom: 5px;
+    }
+    .descricao {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #222;
+      margin-bottom: 8px;
+    }
+    .preco {
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .loading {
+      font-style: italic;
+      color: #666;
+    }
   </style>
 </head>
 <body>
 
-  <div class="admin-bar-top">
-    <span>Painel Drogaria</span>
-    <button onclick="toggleAdminMode()">🔐 Área do Gerente</button>
-  </div>
-
-  <header>
-    <h1>Drogaria Menor Preço</h1>
-    <p>Delivery Búzios • Entrega Rápida</p>
-  </header>
-
-  <div class="container">
-    <div class="search-box">
-      <input type="text" id="search-input" placeholder="🔍 Buscar produto no estoque..." onkeyup="filterProducts()">
-    </div>
-
-    <button class="btn-new-prod" id="btn-add-prod" onclick="addNewProduct()">➕ Adicionar Novo Produto</button>
-    
-    <div class="products-grid" id="products-list"></div>
-  </div>
-
-  <div class="cart-bar">
-    <div>
-      <span style="font-size: 0.85rem; color: var(--gray);">Total:</span>
-      <div id="cart-total" style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">R$ 0,00</div>
-    </div>
-    <button class="cart-btn" onclick="openCart()">Ver Pedido (<span id="cart-count">0</span>)</button>
-  </div>
-
-  <div class="modal" id="cart-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Seu Pedido</h3>
-        <button class="close-btn" onclick="closeCart()">&times;</button>
-      </div>
-
-      <div id="cart-items" style="margin-bottom: 15px;"></div>
-
-      <div class="form-group">
-        <label>Seu Nome:</label>
-        <input type="text" id="cust-name" placeholder="Ex: Maria Silva">
-      </div>
-
-      <div class="form-group">
-        <label>Bairro de Búzios:</label>
-        <select id="cust-neighborhood">
-          <option value="Rasa">Rasa</option>
-          <option value="Armação">Armação</option>
-          <option value="Manguinhos">Manguinhos</option>
-          <option value="Geribá">Geribá</option>
-          <option value="Centro">Centro</option>
-          <option value="Ferradura">Ferradura</option>
-          <option value="Tucuns">Tucuns</option>
-          <option value="Cem Braças">Cem Braças</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Endereço / Ponto de Referência:</label>
-        <input type="text" id="cust-address" placeholder="Rua, Número e Casa">
-      </div>
-
-      <div class="form-group">
-        <label>Forma de Pagamento:</label>
-        <select id="pay-method" onchange="togglePixInfo()">
-          <option value="Pix">Pix (Chave Aleatória Mercado Pago)</option>
-          <option value="Maquininha na Entrega (Crédito/Débito)">Maquininha na Entrega (Crédito/Débito)</option>
-          <option value="Dinheiro">Dinheiro</option>
-        </select>
-      </div>
-
-      <div class="pix-box" id="pix-info">
-        <p style="font-size: 0.85rem; margin-bottom: 4px; color: #1b5e20;">Chave Pix Mercado Pago:</p>
-        <strong id="pix-key-display">44b6a342-cd1d-4216-b269-237477b9bb53</strong>
-        <button class="btn-copy" onclick="copyPixKey()">Copiar Chave Pix</button>
-      </div>
-
-      <button class="btn-checkout" onclick="sendOrder()">Finalizar e Enviar no WhatsApp</button>
-    </div>
-  </div>
+  <h1>Estoque do Sistema</h1>
+  <div id="status" class="loading">Carregando produtos...</div>
+  <div id="produtos-list" class="grid"></div>
 
   <script>
-    const SEU_WHATSAPP = "5522981279222"; 
-    const SUA_CHAVE_PIX = "44b6a342-cd1d-4216-b269-237477b9bb53";
-    const SENHA_GERENTE = "1970";
+    // Suas credenciais do projeto Drogaria Stock
+    const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_default';
 
-    const initialProducts = [
-      { id: 1, name: "CIMEGRIPE 20CL CIMED", price: 7.99, image: "https://via.placeholder.com/150?text=Cimegripe" },
-      { id: 2, name: "DIPIRONA 500MG 10CP PRATI DONADUZZI", price: 1.60, image: "https://via.placeholder.com/150?text=Dipirona" },
-      { id: 3, name: "DIAD 1,5MG 1CP CIMED", price: 3.99, image: "https://via.placeholder.com/150?text=Diad" },
-      { id: 4, name: "LORATAMED 12CP CIMED", price: 13.19, image: "https://via.placeholder.com/150?text=Loratamed" },
-      { id: 5, name: "NARIX AD 30ML CIMED", price: 2.72, image: "https://via.placeholder.com/150?text=Narix" },
-      { id: 6, name: "LOSARTANA POTASSICA 50MG 30CP NEO QUIM", price: 5.44, image: "https://via.placeholder.com/150?text=Losartana" },
-      { id: 7, name: "DORFLEX EV 10CP", price: 5.95, image: "https://via.placeholder.com/150?text=Dorflex" },
-      { id: 8, name: "CITRATO DE SILDENAF.50MG 4CP NEO QUIM", price: 1.49, image: "https://via.placeholder.com/150?text=Sildenafila" },
-      { id: 9, name: "SAB.PROTEX 85G (TODOS OS TIPOS)", price: 2.68, image: "https://via.placeholder.com/150?text=Protex" },
-      { id: 10, name: "PAPEL HIGIENICO FLORAL NEUTRO 12UN", price: 7.68, image: "https://via.placeholder.com/150?text=Papel+Higienico" }
-    ];
+    // Inicializa o Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let products = JSON.parse(localStorage.getItem('drogaria_products')) || initialProducts;
-    let isAdmin = false;
-    let cart = [];
+    // Função para buscar os produtos no banco de dados
+    async function carregarProdutos() {
+      const statusElement = document.getElementById('status');
+      const container = document.getElementById('produtos-list');
 
-    document.getElementById("pix-key-display").innerText = SUA_CHAVE_PIX;
+      try {
+        const { data: produtos, error } = await supabase
+          .from('produtos')
+          .select('*');
 
-    function saveProducts() {
-      localStorage.setItem('drogaria_products', JSON.stringify(products));
-      renderProducts(products);
-    }
+        if (error) throw error;
 
-    function toggleAdminMode() {
-      if(!isAdmin) {
-        const pass = prompt("Digite a senha do gerente:");
-        if(pass === SENHA_GERENTE) {
-          isAdmin = true;
-          alert("Modo Gerente Ativado!");
-        } else {
-          alert("Senha incorreta!");
+        statusElement.style.display = 'none';
+
+        if (!produtos || produtos.length === 0) {
+          container.innerHTML = '<p>Nenhum produto encontrado no estoque.</p>';
           return;
         }
-      } else {
-        isAdmin = false;
-        alert("Modo Gerente Desativado.");
-      }
-      document.getElementById("btn-add-prod").style.display = isAdmin ? "block" : "none";
-      renderProducts(products);
-    }
 
-    function filterProducts() {
-      const query = document.getElementById("search-input").value.toLowerCase();
-      const filtered = products.filter(p => p.name.toLowerCase().includes(query));
-      renderProducts(filtered);
-    }
+        // Renderiza cada produto na tela
+        container.innerHTML = produtos.map(prod => `
+          <div class="card">
+            <div class="codigo">CÓD: ${prod.codigo}</div>
+            <div class="descricao">${prod.descricao}</div>
+            <div class="preco">R$ ${Number(prod.valor_unitario).toFixed(2)}</div>
+          </div>
+        `).join('');
 
-    function renderProducts(itemsToRender) {
-      const grid = document.getElementById("products-list");
-      grid.innerHTML = itemsToRender.map(p => `
-        <div class="product-card">
-          <img src="${p.image}" class="product-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150?text=Sem+Foto'">
-          <div class="product-title">${p.name}</div>
-          <div class="product-price">R$ ${Number(p.price).toFixed(2).replace('.', ',')}</div>
-          
-          <button class="btn-add" onclick="addToCart(${p.id})">+ Adicionar</button>
-
-          ${isAdmin ? `
-            <div class="edit-controls">
-              <label for="file-markup-${p.id}" class="btn-upload-label">📷 Enviar Foto</label>
-              <input type="file" id="file-markup-${p.id}" accept="image/*" style="display:none" onchange="handleFileUpload(event, ${p.id})">
-              <button onclick="editPrice(${p.id})">✏️ Mudar Preço</button>
-              <button onclick="editName(${p.id})">📝 Mudar Nome</button>
-              <button class="btn-del" onclick="deleteProduct(${p.id})">🗑️ Excluir</button>
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function handleFileUpload(event, id) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const prod = products.find(p => p.id === id);
-          prod.image = e.target.result;
-          saveProducts();
-        };
-        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Erro na conexão:', err);
+        statusElement.textContent = 'Erro ao carregar os produtos. Verifique se a sua Publishable Key no Supabase é a default.';
+        statusElement.style.color = 'red';
       }
     }
 
-    function editPrice(id) {
-      const prod = products.find(p => p.id === id);
-      const newPrice = prompt(`Novo preço para "${prod.name}":`, prod.price);
-      if(newPrice !== null && !isNaN(newPrice.replace(',', '.'))) {
-        prod.price = parseFloat(newPrice.replace(',', '.'));
-        saveProducts();
-      }
-    }
-
-    function editName(id) {
-      const prod = products.find(p => p.id === id);
-      const newName = prompt(`Novo nome do produto:`, prod.name);
-      if(newName) {
-        prod.name = newName;
-        saveProducts();
-      }
-    }
-
-    function deleteProduct(id) {
-      if(confirm("Tem certeza que deseja excluir este produto?")) {
-        products = products.filter(p => p.id !== id);
-        saveProducts();
-      }
-    }
-
-    function addNewProduct() {
-      const name = prompt("Nome do novo produto:");
-      if(!name) return;
-      const price = prompt("Preço (ex: 15.90):");
-      if(!price) return;
-
-      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({
-        id: newId,
-        name: name,
-        price: parseFloat(price.replace(',', '.')),
-        image: "https://via.placeholder.com/150?text=Sem+Foto"
-      });
-      saveProducts();
-    }
-
-    function addToCart(id) {
-      const prod = products.find(p => p.id === id);
-      const item = cart.find(c => c.id === id);
-      if(item) { item.qty++; } else { cart.push({...prod, qty: 1}); }
-      updateCart();
-    }
-
-    function updateCart() {
-      const count = cart.reduce((acc, item) => acc + item.qty, 0);
-      const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-      document.getElementById("cart-count").innerText = count;
-      document.getElementById("cart-total").innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-    }
-
-    function openCart() {
-      if(cart.length === 0) return alert("Seu carrinho está vazio!");
-      const cartItemsDiv = document.getElementById("cart-items");
-      cartItemsDiv.innerHTML = cart.map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
-          <span>${i.qty}x ${i.name}</span>
-          <strong>R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')}</strong>
-        </div>
-      `).join('');
-      document.getElementById("cart-modal").style.display = "flex";
-    }
-
-    function closeCart() {
-      document.getElementById("cart-modal").style.display = "none";
-    }
-
-    function togglePixInfo() {
-      const pay = document.getElementById("pay-method").value;
-      document.getElementById("pix-info").style.display = (pay === "Pix") ? "block" : "none";
-    }
-
-    function copyPixKey() {
-      navigator.clipboard.writeText(SUA_CHAVE_PIX);
-      alert("Chave Pix copiada!");
-    }
-
-    function sendOrder() {
-      const name = document.getElementById("cust-name").value;
-      const addr = document.getElementById("cust-address").value;
-      const neigh = document.getElementById("cust-neighborhood").value;
-      const pay = document.getElementById("pay-method").value;
-
-      if(!name || !addr) return alert("Preencha nome e endereço!");
-
-      let text = `*NOVO PEDIDO - DROGARIA MENOR PREÇO*\n\n`;
-      text += `*Cliente:* ${name}\n`;
-      text += `*Bairro:* ${neigh}\n`;
-      text += `*Endereço:* ${addr}\n`;
-      text += `*Pagamento:* ${pay}\n\n`;
-      text += `*Itens:*\n`;
-
-      cart.forEach(i => {
-        text += `• ${i.qty}x ${i.name} (R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')})\n`;
-      });
-
-      const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-      text += `\n*TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*`;
-
-      if(pay === "Pix") {
-        text += `\n\n_Chave Pix Mercado Pago: ${SUA_CHAVE_PIX}_`;
-      }
-
-      const encoded = encodeURIComponent(text);
-      window.open(`https://wa.me/${SEU_WHATSAPP}?text=${encoded}`, '_blank');
-    }
-
-    renderProducts(products);
+    // Executa a busca ao abrir a página
+    carregarProdutos();
   </script>
 </body>
 </html>
