@@ -59,14 +59,14 @@
   <div id="produtos-list" class="grid"></div>
 
   <script>
-    // Suas credenciais do projeto Drogaria Stock
+    // Suas credenciais oficiais configuradas
     const SUPABASE_URL = 'https://mmuyldjchdekxeeeafjm.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_default';
+    const SUPABASE_ANON_KEY = 'Sb_publishable_BDjlzJ74FN8jDxP-C_DsQw_b4tgvRrV';
 
-    // Inicializa o Supabase
+    // Inicializa a conexão
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Função para buscar os produtos no banco de dados
+    // Busca os produtos no banco de dados
     async function carregarProdutos() {
       const statusElement = document.getElementById('status');
       const container = document.getElementById('produtos-list');
@@ -96,12 +96,11 @@
 
       } catch (err) {
         console.error('Erro na conexão:', err);
-        statusElement.textContent = 'Erro ao carregar os produtos. Verifique se a sua Publishable Key no Supabase é a default.';
+        statusElement.textContent = 'Erro ao carregar os produtos.';
         statusElement.style.color = 'red';
       }
     }
 
-    // Executa a busca ao abrir a página
     carregarProdutos();
   </script>
 </body>
