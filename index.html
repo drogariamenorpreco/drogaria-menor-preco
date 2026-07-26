@@ -35,9 +35,9 @@
     .product-price { color: var(--primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
     .btn-add { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
 
-    /* Painel de Edição do Gerente */
+    /* Painel de Edição */
     .edit-controls { background: #fff8e1; border: 1px solid #ffe082; padding: 8px; border-radius: 6px; margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
-    .edit-controls button { background: #ff9800; color: white; border: none; padding: 5px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+    .edit-controls button, .edit-controls label { background: #ff9800; color: white; border: none; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; }
     .edit-controls button.btn-del { background: #f44336; }
 
     .btn-new-prod { background: #2196F3; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; margin-bottom: 15px; cursor: pointer; display: none; }
@@ -63,7 +63,6 @@
 </head>
 <body>
 
-  <!-- Barra do Gerente -->
   <div class="admin-bar-top">
     <span>Painel Drogaria</span>
     <button onclick="toggleAdminMode()">🔐 Área do Gerente</button>
@@ -87,7 +86,6 @@
     <button class="cart-btn" onclick="openCart()">Ver Pedido (<span id="cart-count">0</span>)</button>
   </div>
 
-  <!-- Modal do Carrinho -->
   <div class="modal" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -143,9 +141,8 @@
   <script>
     const SEU_WHATSAPP = "5522981279222"; 
     const SUA_CHAVE_PIX = "44b6a342-cd1d-4216-b269-237477b9bb53";
-    const SENHA_GERENTE = "1970"; // <-- SUA NOVA SENHA DA ÁREA DO GERENTE
+    const SENHA_GERENTE = "1970";
 
-    // PRODUTOS PADRÃO (se ainda não houver alteração salva)
     const initialProducts = [
       {
         id: 1,
@@ -173,7 +170,6 @@
       }
     ];
 
-    // Carrega do navegador ou usa a lista padrão
     let products = JSON.parse(localStorage.getItem('drogaria_products')) || initialProducts;
     let isAdmin = false;
     let cart = [];
@@ -190,7 +186,7 @@
         const pass = prompt("Digite a senha do gerente para editar:");
         if(pass === SENHA_GERENTE) {
           isAdmin = true;
-          alert("Modo Gerente Ativado! Agora você pode editar preços, nomes e fotos.");
+          alert("Modo Gerente Ativado!");
         } else {
           alert("Senha incorreta!");
           return;
@@ -216,7 +212,11 @@
           ${isAdmin ? `
             <div class="edit-controls">
               <button onclick="editPrice(${p.id})">✏️ Mudar Preço</button>
-              <button onclick="editImage(${p.id})">🖼️ Mudar Link da Foto</button>
+              
+              <label for="upload-${p.id}">📱 Enviar Foto da Galeria</label>
+              <input type="file" id="upload-${p.id}" accept="image/*" style="display:none" onchange="uploadImage(event, ${p.id})">
+              
+              <button onclick="editImageLink(${p.id})">🌐 Usar Link de Foto</button>
               <button onclick="editName(${p.id})">📝 Mudar Nome</button>
               <button class="btn-del" onclick="deleteProduct(${p.id})">🗑️ Excluir</button>
             </div>
@@ -225,7 +225,20 @@
       `).join('');
     }
 
-    // Funções de Edição do Gerente
+    // Função para carregar a foto direto da galeria do celular
+    function uploadImage(event, id) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const prod = products.find(p => p.id === id);
+          prod.image = e.target.result; // Converte a foto do celular em dados utilizáveis
+          saveProducts();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function editPrice(id) {
       const prod = products.find(p => p.id === id);
       const newPrice = prompt(`Novo preço para "${prod.name}":`, prod.price);
@@ -235,9 +248,9 @@
       }
     }
 
-    function editImage(id) {
+    function editImageLink(id) {
       const prod = products.find(p => p.id === id);
-      const newImg = prompt(`Link da nova foto para "${prod.name}":`, prod.image);
+      const newImg = prompt(`Cole o link da foto para "${prod.name}":`, prod.image);
       if(newImg) {
         prod.image = newImg;
         saveProducts();
@@ -265,14 +278,13 @@
       if(!name) return;
       const price = prompt("Preço (ex: 15.90):");
       if(!price) return;
-      const image = prompt("Link da Imagem (opcional):") || "https://via.placeholder.com/150?text=Sem+Foto";
 
       const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
       products.push({
         id: newId,
         name: name,
         price: parseFloat(price.replace(',', '.')),
-        image: image
+        image: "https://via.placeholder.com/150?text=Sem+Foto"
       });
       saveProducts();
     }
