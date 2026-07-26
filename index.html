@@ -1,277 +1,257 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drogaria Menor Preço - Búzios Delivery</title>
-    <style>
-        :root {
-            --red-main: #e50914;
-            --red-dark: #b80710;
-            --bg-light: #f4f6f8;
-            --text-dark: #222;
-            --gray-border: #e0e0e0;
-            --purple-tag: #e8eaf6;
-            --purple-text: #3f51b5;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drogaria Menor Preço - Búzios</title>
+  <style>
+    :root {
+      --primary: #e50914;
+      --primary-dark: #b80710;
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --gray: #666666;
+      --border: #e0e0e0;
+      --green: #25d366;
+    }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 75px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
 
-        /* Top Header */
-        .top-header { background: var(--red-main); color: white; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .top-header .logo { font-size: 1.1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-        .cart-icon { position: relative; font-size: 1.3rem; cursor: pointer; }
-        .cart-badge { position: absolute; top: -6px; right: -8px; background: white; color: var(--red-main); font-size: 0.75rem; font-weight: bold; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+    /* Topo Fixado */
+    header { background: var(--primary); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.2rem; font-weight: bold; }
+    header p { font-size: 0.8rem; opacity: 0.9; }
 
-        /* Search Bar */
-        .search-area { background: var(--red-main); padding: 0 16px 12px 16px; }
-        .search-input-wrapper { background: white; border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
-        .search-input-wrapper input { border: none; outline: none; width: 100%; font-size: 0.95rem; }
+    /* Container Principal */
+    .container { max-width: 600px; margin: 0 auto; padding: 15px; }
 
-        /* Categories Slider */
-        .categories-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 14px 16px; background: white; border-bottom: 1px solid var(--gray-border); }
-        .cat-chip { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: #f0f2f5; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+    /* Lista de Produtos */
+    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .product-card { background: var(--card-bg); border-radius: 8px; padding: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+    .product-img { width: 100%; height: 120px; object-fit: contain; border-radius: 4px; background: #fafafa; margin-bottom: 8px; }
+    .product-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { color: var(--primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+    .btn-add { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
 
-        /* Grid de Categorias Principais */
-        .grid-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; background: white; margin-top: 8px; }
-        .cat-card { border: 1px solid var(--gray-border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: bold; }
+    /* Carrinho / Modal */
+    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+    .cart-btn { background: var(--green); color: white; border: none; padding: 10px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* Banner de Aviso de Receita */
-        .recipe-alert { background: #fff3e0; border-left: 4px solid #ff9800; margin: 12px 16px; padding: 12px; border-radius: 6px; font-size: 0.85rem; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-end; }
+    .modal-content { background: white; width: 100%; max-width: 600px; border-radius: 16px 16px 0 0; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
 
-        /* Vitrine de Produtos */
-        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 8px 16px; }
-        .section-title { font-size: 1.1rem; font-weight: bold; }
-        .see-more { color: var(--red-main); text-decoration: none; font-size: 0.88rem; font-weight: bold; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
 
-        .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px 16px; }
-        .product-card { background: white; border-radius: 8px; padding: 12px; border: 1px solid var(--gray-border); display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .badge-off { position: absolute; top: 10px; right: 10px; background: #fff3e0; color: #e65100; font-size: 0.72rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-        .product-img { width: 100%; height: 110px; object-fit: contain; margin-bottom: 8px; }
-        .product-stars { color: #ffb400; font-size: 0.8rem; margin-bottom: 4px; }
-        .product-name { font-size: 0.85rem; font-weight: 600; line-height: 1.2; height: 32px; overflow: hidden; margin-bottom: 6px; }
-        .product-brand { font-size: 0.75rem; color: #777; margin-bottom: 6px; }
-        .price-old { font-size: 0.78rem; text-decoration: line-through; color: #999; }
-        .price-current { font-size: 1.1rem; font-weight: bold; color: var(--text-dark); }
-        .btn-buy { background: var(--red-main); color: white; border: none; border-radius: 6px; padding: 10px; font-weight: bold; font-size: 0.9rem; width: 100%; margin-top: 10px; cursor: pointer; }
+    .pix-box { background: #e8f5e9; border: 1px dashed var(--green); padding: 12px; border-radius: 8px; text-align: center; margin: 15px 0; }
+    .pix-box strong { color: #2e7d32; font-size: 0.95rem; word-break: break-all; }
+    .btn-copy { background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; margin-top: 8px; cursor: pointer; }
 
-        /* Seção Búzios Delivery Config */
-        .delivery-box { background: white; margin: 12px 16px; padding: 16px; border-radius: 8px; border: 1px solid var(--gray-border); }
-        .delivery-box label { font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 8px; }
-        .delivery-box select, .delivery-box input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.9rem; margin-bottom: 10px; }
-
-        /* Navigation Bar Inferior */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--gray-border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
-        .nav-item { text-align: center; color: #666; font-size: 0.72rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .nav-item.active { color: var(--red-main); font-weight: bold; }
-        .nav-item div { font-size: 1.2rem; }
-
-        /* Modal do Carrinho */
-        .cart-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; justify-content: flex-end; flex-direction: column; }
-        .cart-content { background: white; border-radius: 16px 16px 0 0; padding: 20px; max-height: 80vh; overflow-y: auto; }
-        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 12px; }
-        .btn-checkout { background: #25d366; color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; font-size: 1rem; margin-top: 10px; cursor: pointer; }
-    </style>
+    .btn-checkout { background: var(--green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 1rem; cursor: pointer; }
+  </style>
 </head>
 <body>
 
-    <!-- Header Principal -->
-    <div class="top-header">
-        <div class="logo">Drogaria Menor Preço</div>
-        <div class="cart-icon" onclick="toggleCart()">
-            🛒 <span class="cart-badge" id="cart-count">0</span>
-        </div>
-    </div>
+  <header>
+    <h1>Drogaria Menor Preço</h1>
+    <p>Delivery Búzios • Entrega Rápida</p>
+  </header>
 
-    <!-- Barra de Busca -->
-    <div class="search-area">
-        <div class="search-input-wrapper">
-            🔍 <input type="text" id="searchInput" placeholder="O que você está buscando?" onkeyup="filtrarProdutos()">
-        </div>
-    </div>
+  <div class="container">
+    <div class="products-grid" id="products-list"></div>
+  </div>
 
-    <!-- Scroll de Marcas / Categorias Rápidas -->
-    <div class="categories-scroll">
-        <div class="cat-chip">🧴 Creamy 20% OFF</div>
-        <div class="cat-chip">💊 Genéricos</div>
-        <div class="cat-chip">Perfumes</div>
-        <div class="cat-chip">🧼 CeraVe</div>
+  <div class="cart-bar">
+    <div>
+      <span style="font-size: 0.85rem; color: var(--gray);">Total:</span>
+      <div id="cart-total" style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">R$ 0,00</div>
     </div>
+    <button class="cart-btn" onclick="openCart()">Ver Pedido (<span id="cart-count">0</span>)</button>
+  </div>
 
-    <!-- Alerta de Retenção de Receita -->
-    <div class="recipe-alert">
-        <strong>📄 Receita Digital / Retida</strong><br>
-        Envie a foto da sua receita no final do pedido para liberação dos medicamentos controlados via Motoboy em Búzios.
-    </div>
+  <!-- Modal do Carrinho -->
+  <div class="modal" id="cart-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Seu Pedido</h3>
+        <button class="close-btn" onclick="closeCart()">&times;</button>
+      </div>
 
-    <!-- Categorias Principais -->
-    <div class="grid-categories">
-        <div class="cat-card">💊 Medicamentos</div>
-        <div class="cat-card">❤️ Saúde e Bem-estar</div>
-        <div class="cat-card">👶 Mamãe e Bebê</div>
-        <div class="cat-card">💄 Beleza e Cabelos</div>
-    </div>
+      <div id="cart-items" style="margin-bottom: 15px;"></div>
 
-    <!-- Seleção de Bairro e Endereço -->
-    <div class="delivery-box">
-        <label>🛵 Selecione seu Bairro em Búzios:</label>
-        <select id="bairroSelect">
-            <option value="3.00">Rasa - Taxa R$ 3,00</option>
-            <option value="3.00">Vila Verde - Taxa R$ 3,00</option>
-            <option value="3.00">Marina - Taxa R$ 3,00</option>
-            <option value="3.00">Maria Joaquina - Taxa R$ 3,00</option>
-            <option value="10.00">Geribá - Taxa R$ 10,00</option>
-            <option value="10.00">Manguinhos - Taxa R$ 10,00</option>
-            <option value="10.00">Cem Braças - Taxa R$ 10,00</option>
-            <option value="10.00">São José - Taxa R$ 10,00</option>
+      <div class="form-group">
+        <label>Seu Nome:</label>
+        <input type="text" id="cust-name" placeholder="Ex: Maria Silva">
+      </div>
+
+      <div class="form-group">
+        <label>Bairro de Búzios:</label>
+        <select id="cust-neighborhood">
+          <option value="Rasa">Rasa</option>
+          <option value="Armação">Armação</option>
+          <option value="Manguinhos">Manguinhos</option>
+          <option value="Geribá">Geribá</option>
+          <option value="Centro">Centro</option>
+          <option value="Ferradura">Ferradura</option>
+          <option value="Tucuns">Tucuns</option>
+          <option value="Cem Braças">Cem Braças</option>
         </select>
-        <input type="text" id="clienteCPF" placeholder="Informe seu CPF para descontos de laboratório">
-    </div>
+      </div>
 
-    <!-- Seção de Ofertas / Mais Vendidos -->
-    <div class="section-header">
-        <div class="section-title">Mais Vendidos</div>
-        <a href="#" class="see-more">Ver mais</a>
-    </div>
+      <div class="form-group">
+        <label>Endereço / Ponto de Referência:</label>
+        <input type="text" id="cust-address" placeholder="Rua, Número e Casa">
+      </div>
 
-    <div class="products-grid" id="productsGrid">
-        <!-- Produto 1 -->
-        <div class="product-card" data-name="loratadina antialergico cimed">
-            <span class="badge-off">84% OFF</span>
-            <img src="https://via.placeholder.com/120?text=Loratadina" class="product-img" alt="Loratadina">
-            <div class="product-stars">★★★★★ (225)</div>
-            <div class="product-name">Antialérgico Loratadina 10mg Genérico</div>
-            <div class="product-brand">Cimed</div>
-            <div class="price-old">R$ 25,23</div>
-            <div class="price-current">R$ 3,99</div>
-            <button class="btn-buy" onclick="adicionarAoCarrinho('Loratadina 10mg Cimed', 3.99)">Comprar</button>
+      <div class="form-group">
+        <label>Forma de Pagamento:</label>
+        <select id="pay-method" onchange="togglePixInfo()">
+          <option value="Pix">Pix (Chave / Copia e Cola)</option>
+          <option value="Maquininha na Entrega (Crédito/Débito)">Maquininha na Entrega (Crédito/Débito)</option>
+          <option value="Dinheiro">Dinheiro</option>
+        </select>
+      </div>
+
+      <!-- Caixa com Chave Pix / Aleatória -->
+      <div class="pix-box" id="pix-info">
+        <p style="font-size: 0.85rem; margin-bottom: 4px;">Chave Pix para Pagamento:</p>
+        <strong id="pix-key-display">SEU-PIX-AQUI</strong><br>
+        <button class="btn-copy" onclick="copyPixKey()">Copiar Chave Pix</button>
+      </div>
+
+      <button class="btn-checkout" onclick="sendOrder()">Finalizar e Enviar no WhatsApp</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================
+    // DADOS DA SUA FARMÁCIA
+    // ========================================================
+    const SEU_WHATSAPP = "5522981279222"; // Seu número configurado
+    
+    // Você pode colar aqui sua Chave Aleatória (EVP) gerada no app do seu banco
+    const SUA_CHAVE_PIX = "00020126580014br.gov.bcb.pix... (Sua chave ou código aqui)"; 
+
+    // LISTA DE PRODUTOS
+    const products = [
+      {
+        id: 1,
+        name: "Dipirona Monoidratada 500mg 20 Cps",
+        price: 4.99,
+        image: "https://via.placeholder.com/150?text=Dipirona"
+      },
+      {
+        id: 2,
+        name: "Dorflex 36 Comprimidos",
+        price: 18.50,
+        image: "https://via.placeholder.com/150?text=Dorflex"
+      },
+      {
+        id: 3,
+        name: "Protetor Solar Sundown FPS 50",
+        price: 45.90,
+        image: "https://via.placeholder.com/150?text=Protetor+Solar"
+      },
+      {
+        id: 4,
+        name: "Fralda Pampers Supersec G 30 Unid",
+        price: 39.90,
+        image: "https://via.placeholder.com/150?text=Fralda+Pampers"
+      }
+    ];
+
+    let cart = [];
+
+    document.getElementById("pix-key-display").innerText = SUA_CHAVE_PIX;
+
+    function renderProducts() {
+      const grid = document.getElementById("products-list");
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          <img src="${p.image}" class="product-img" alt="${p.name}">
+          <div class="product-title">${p.name}</div>
+          <div class="product-price">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+          <button class="btn-add" onclick="addToCart(${p.id})">+ Adicionar</button>
         </div>
+      `).join('');
+    }
 
-        <!-- Produto 2 -->
-        <div class="product-card" data-name="soro fisiologico ever care">
-            <span class="badge-off">Leve + por -</span>
-            <img src="https://via.placeholder.com/120?text=Soro+Fisiologico" class="product-img" alt="Soro">
-            <div class="product-stars">★★★★★ (208)</div>
-            <div class="product-name">Soro Fisiológico Ever Care 500ml</div>
-            <div class="product-brand">Ever Care</div>
-            <div class="price-old">R$ 9,99</div>
-            <div class="price-current">R$ 7,49</div>
-            <button class="btn-buy" onclick="adicionarAoCarrinho('Soro Fisiológico 500ml', 7.49)">Comprar</button>
+    function addToCart(id) {
+      const prod = products.find(p => p.id === id);
+      const item = cart.find(c => c.id === id);
+      if(item) { item.qty++; } else { cart.push({...prod, qty: 1}); }
+      updateCart();
+    }
+
+    function updateCart() {
+      const count = cart.reduce((acc, item) => acc + item.qty, 0);
+      const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      document.getElementById("cart-count").innerText = count;
+      document.getElementById("cart-total").innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+
+    function openCart() {
+      if(cart.length === 0) return alert("Seu carrinho está vazio!");
+      const cartItemsDiv = document.getElementById("cart-items");
+      cartItemsDiv.innerHTML = cart.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+          <span>${i.qty}x ${i.name}</span>
+          <strong>R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')}</strong>
         </div>
-    </div>
+      `).join('');
+      document.getElementById("cart-modal").style.display = "flex";
+    }
 
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav">
-        <a href="#" class="nav-item active"><div>🏠</div>Home</a>
-        <a href="#" class="nav-item"><div>📦</div>Pedidos</a>
-        <a href="#" class="nav-item"><div>🏷️</div>Ofertas</a>
-        <a href="#" class="nav-item"><div>🩺</div>Serviços</a>
-        <a href="#" class="nav-item"><div>👤</div>Perfil</a>
-    </div>
+    function closeCart() {
+      document.getElementById("cart-modal").style.display = "none";
+    }
 
-    <!-- Modal de Carrinho -->
-    <div class="cart-modal" id="cartModal">
-        <div class="cart-content">
-            <div class="cart-header">
-                <h3>Seu Carrinho</h3>
-                <span style="cursor:pointer; font-weight:bold;" onclick="toggleCart()">✕ Fechar</span>
-            </div>
-            <div id="cartItems">O carrinho está vazio.</div>
-            <hr style="margin:12px 0;">
-            <div style="display:flex; justify-size:space-between; font-weight:bold;">
-                <span>Total com Taxa:</span>
-                <span id="cartTotal">R$ 0,00</span>
-            </div>
-            <button class="btn-checkout" onclick="finalizarPedidoWhatsApp()">
-                PAGAR COM PIX / ENVIAR WHATSAPP
-            </button>
-        </div>
-    </div>
+    function togglePixInfo() {
+      const pay = document.getElementById("pay-method").value;
+      document.getElementById("pix-info").style.display = (pay === "Pix") ? "block" : "none";
+    }
 
-    <script>
-        // CONFIGURAÇÃO DO WHATSAPP (ALTERE QUANDO QUISER)
-        let WHATSAPP_LOJA = "5524981279222"; 
+    function copyPixKey() {
+      navigator.clipboard.writeText(SUA_CHAVE_PIX);
+      alert("Chave Pix copiada com sucesso!");
+    }
 
-        let carrinho = [];
+    function sendOrder() {
+      const name = document.getElementById("cust-name").value;
+      const addr = document.getElementById("cust-address").value;
+      const neigh = document.getElementById("cust-neighborhood").value;
+      const pay = document.getElementById("pay-method").value;
 
-        function adicionarAoCarrinho(nome, preco) {
-            carrinho.push({ nome, preco });
-            atualizarCarrinhoUI();
-            alert(`${nome} adicionado ao carrinho!`);
-        }
+      if(!name || !addr) return alert("Por favor, preencha seu nome e endereço!");
 
-        function atualizarCarrinhoUI() {
-            document.getElementById('cart-count').innerText = carrinho.length;
-            let cartItemsDiv = document.getElementById('cartItems');
-            let total = 0;
+      let text = `*NOVO PEDIDO - DROGARIA MENOR PREÇO*\n\n`;
+      text += `*Cliente:* ${name}\n`;
+      text += `*Bairro:* ${neigh}\n`;
+      text += `*Endereço:* ${addr}\n`;
+      text += `*Pagamento:* ${pay}\n\n`;
+      text += `*Itens do Pedido:*\n`;
 
-            if(carrinho.length === 0) {
-                cartItemsDiv.innerHTML = "O carrinho está vazio.";
-            } else {
-                cartItemsDiv.innerHTML = "";
-                carrinho.forEach((item, index) => {
-                    total += item.preco;
-                    cartItemsDiv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <span>${item.nome}</span>
-                        <b>R$ ${item.preco.toFixed(2)}</b>
-                    </div>`;
-                });
-            }
+      cart.forEach(i => {
+        text += `• ${i.qty}x ${i.name} (R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')})\n`;
+      });
 
-            let taxa = parseFloat(document.getElementById('bairroSelect').value);
-            let totalFinal = total + (carrinho.length > 0 ? taxa : 0);
-            document.getElementById('cartTotal').innerText = `R$ ${totalFinal.toFixed(2)}`;
-        }
+      const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      text += `\n*TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*`;
 
-        function toggleCart() {
-            let modal = document.getElementById('cartModal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-        }
+      if(pay === "Pix") {
+        text += `\n\n_Pagamento via Pix para a chave: ${SUA_CHAVE_PIX}_`;
+      }
 
-        function filtrarProdutos() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
-            let cards = document.querySelectorAll('.product-card');
+      const encoded = encodeURIComponent(text);
+      window.open(`https://wa.me/${SEU_WHATSAPP}?text=${encoded}`, '_blank');
+    }
 
-            cards.forEach(card => {
-                let name = card.getAttribute('data-name');
-                if (name.includes(input)) {
-                    card.style.display = "flex";
-                } else {
-                    card.style.display = "none";
-                }
-            });
-        }
-
-        function finalizarPedidoWhatsApp() {
-            if(carrinho.length === 0) {
-                alert("Adicione pelo menos um produto ao carrinho!");
-                return;
-            }
-
-            let bairroSelect = document.getElementById('bairroSelect');
-            let bairroNome = bairroSelect.options[bairroSelect.selectedIndex].text;
-            let cpf = document.getElementById('clienteCPF').value || "Não informado";
-
-            let texto = `*NOVO PEDIDO - DROGARIA MENOR PREÇO*\n\n`;
-            texto += `*Itens do Pedido:*\n`;
-            let subtotal = 0;
-            carrinho.forEach(i => {
-                texto += `• ${i.nome} - R$ ${i.preco.toFixed(2)}\n`;
-                subtotal += i.preco;
-            });
-
-            let taxa = parseFloat(bairroSelect.value);
-            let totalFinal = subtotal + taxa;
-
-            texto += `\n*CPF Desconto:* ${cpf}\n`;
-            texto += `*Entrega:* ${bairroNome}\n`;
-            texto += `*Valor Total com Taxa:* R$ ${totalFinal.toFixed(2)}\n\n`;
-            texto += `_Por favor, me envie a chave PIX para pagamento imediato!_`;
-
-            let url = `https://api.whatsapp.com/send?phone=${WHATSAPP_LOJA}&text=${encodeURIComponent(texto)}`;
-            window.open(url, '_blank');
-        }
-    </script>
+    renderProducts();
+  </script>
 </body>
 </html>
