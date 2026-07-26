@@ -19,18 +19,16 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
 
-    /* Topo Fixado */
+    /* Cabeçalho */
     header { background: var(--primary); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     header h1 { font-size: 1.2rem; font-weight: bold; }
     header p { font-size: 0.8rem; opacity: 0.9; }
 
-    /* Container Principal */
+    /* Layout */
     .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-
-    /* Lista de Produtos */
     .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
     .product-card { background: var(--card-bg); border-radius: 8px; padding: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
-    .product-img { width: 100%; height: 120px; object-fit: contain; border-radius: 4px; background: #fafafa; margin-bottom: 8px; }
+    .product-img { width: 100%; height: 130px; object-fit: contain; border-radius: 4px; background: #ffffff; margin-bottom: 8px; }
     .product-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .product-price { color: var(--primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
     .btn-add { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
@@ -117,7 +115,6 @@
         </select>
       </div>
 
-      <!-- Caixa com Chave Pix Aleatória Mercado Pago -->
       <div class="pix-box" id="pix-info">
         <p style="font-size: 0.85rem; margin-bottom: 4px; color: #1b5e20;">Chave Pix Mercado Pago:</p>
         <strong id="pix-key-display">44b6a342-cd1d-4216-b269-237477b9bb53</strong>
@@ -129,37 +126,39 @@
   </div>
 
   <script>
-    // ========================================================
-    // CONFIGURAÇÕES DA FARMÁCIA
-    // ========================================================
+    // CONFIGURAÇÕES GERAIS DA FARMÁCIA
     const SEU_WHATSAPP = "5522981279222"; 
     const SUA_CHAVE_PIX = "44b6a342-cd1d-4216-b269-237477b9bb53";
 
-    // LISTA DE PRODUTOS
+    // =========================================================================
+    // ÁREA DE EDICÃO DOS PRODUTOS E PREÇOS:
+    // Altere os preços trocando os valores numéricos de "price".
+    // Para adicionar mais produtos, adicione novos blocos { id: ..., name: ... }
+    // =========================================================================
     const products = [
       {
         id: 1,
         name: "Dipirona Monoidratada 500mg 20 Cps",
         price: 4.99,
-        image: "https://via.placeholder.com/150?text=Dipirona"
+        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop"
       },
       {
         id: 2,
         name: "Dorflex 36 Comprimidos",
         price: 18.50,
-        image: "https://via.placeholder.com/150?text=Dorflex"
+        image: "https://images.unsplash.com/photo-1550572017-edf7b6b194d3?w=300&auto=format&fit=crop"
       },
       {
         id: 3,
         name: "Protetor Solar Sundown FPS 50",
         price: 45.90,
-        image: "https://via.placeholder.com/150?text=Protetor+Solar"
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&auto=format&fit=crop"
       },
       {
         id: 4,
         name: "Fralda Pampers Supersec G 30 Unid",
         price: 39.90,
-        image: "https://via.placeholder.com/150?text=Fralda+Pampers"
+        image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&auto=format&fit=crop"
       }
     ];
 
