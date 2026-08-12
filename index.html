@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drogaria Menor Preço - Estoque</title>
-  
+  <title>Farma Lagos - Estoque</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
-  
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,7 +14,9 @@
       margin: 0;
       padding: 15px;
     }
-    h1 { color: #333; font-size: 1.5em; text-align: center; }
+    .header-loja { text-align: center; margin-bottom: 20px; }
+    h1 { color: #333; font-size: 1.5em; margin: 5px 0; }
+    .cnpj-info { font-size: 0.9em; color: #555; font-weight: bold; }
     .form-card {
       background: #fff;
       padding: 15px;
@@ -69,7 +71,10 @@
 </head>
 <body>
 
-  <h1>Estoque - Drogaria Menor Preço</h1>
+  <div class="header-loja">
+    <h1>FARMA LAGOS</h1>
+    <div class="cnpj-info">CNPJ: 68.530.976/0001-00</div>
+  </div>
 
   <div class="form-card">
     <h3>Ajustar / Adicionar Preço Manual</h3>
@@ -93,11 +98,9 @@
       const statusEl = document.getElementById('status');
       const container = document.getElementById('produtos-list');
 
-      // Pega os preços manuais salvos no celular (se houver)
       let manuais = JSON.parse(localStorage.getItem('estoque_manual')) || [];
 
       try {
-        // Tenta buscar do Supabase
         const { data, error } = await _supabase.from('produtos').select('*');
 
         if (error) {
@@ -107,12 +110,10 @@
         let listaFinal = [];
 
         if (data && data.length > 0) {
-          // Mescla os dados do Supabase com os ajustes manuais do celular
           listaFinal = data.map(prod => {
             const cod = String(prod.codigo || prod.id || '');
             const manualEncontrado = manuais.find(m => m.codigo === cod);
 
-            // Se você cadastrou um preço manual para este código, ele usa o seu. Senão, tenta do banco.
             const precoFinal = manualEncontrado ? manualEncontrado.preco : (prod.preco || prod.valor || prod.valor_unitario || 0);
             const descFinal = manualEncontrado ? manualEncontrado.descricao : (prod.descricao || prod.nome || 'Produto');
 
@@ -125,7 +126,6 @@
           });
         }
 
-        // Adiciona também os produtos que foram criados 100% manual e não estão no Supabase
         manuais.forEach(m => {
           if (!listaFinal.some(item => item.codigo === m.codigo)) {
             listaFinal.push(m);
@@ -150,7 +150,6 @@
 
       } catch (e) {
         statusEl.textContent = 'Modo Offline / Usando dados locais.';
-        // Se cair aqui, mostra pelo menos os manuais
         if (manuais.length > 0) {
           container.innerHTML = manuais.map((p, index) => `
             <div class="card">
@@ -175,12 +174,8 @@
       }
 
       let manuais = JSON.parse(localStorage.getItem('estoque_manual')) || [];
-      
-      // Remove se já existir para atualizar o preço
       manuais = manuais.filter(m => m.codigo !== codigo);
-      
       manuais.push({ codigo, descricao, preco, origem: 'manual' });
-      
       localStorage.setItem('estoque_manual', JSON.stringify(manuais));
 
       document.getElementById('codigo').value = '';
